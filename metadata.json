@@ -1,5 +1,5 @@
 {
-  "name": "PaperMe Pro",
+  "name": "PaperMe",
   "description": "The ultimate online paper generator. Create custom ruled, grid, dot, and music staff paper for printing.",
   "requestFramePermissions": [
     "camera",

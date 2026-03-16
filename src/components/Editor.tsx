@@ -20,7 +20,17 @@ import {
   ChevronLeft,
   ChevronRight,
   Printer,
-  FileText
+  FileText,
+  FileDown,
+  FileCode,
+  FileImage,
+  Lightbulb,
+  Mail,
+  Globe,
+  ExternalLink,
+  HelpCircle,
+  Info,
+  Heart
 } from 'lucide-react';
 
 import { motion, AnimatePresence } from 'motion/react';
@@ -67,7 +77,7 @@ export const Editor: React.FC<EditorProps> = ({
     const existing = canvas.getObjects().find(obj => (obj as any).isWatermark);
     if (existing) canvas.remove(existing);
 
-    const watermark = new fabric.IText('Generated with PaperMe Pro', {
+    const watermark = new fabric.IText('Generated with PaperMe', {
       left: pxWidth / 2,
       top: pxHeight - 15,
       fontSize: 10,
@@ -142,11 +152,11 @@ export const Editor: React.FC<EditorProps> = ({
         }
       }
     } else if (layoutType === 'staff') {
-      const staffHeight = pxSpacing * 4;
-      const staffGap = pxSpacing * 2;
-      for (let y = pxMargin + pxSpacing; y < pxHeight - pxMargin - staffHeight; y += staffHeight + staffGap) {
+      const staffSpacing = pxSpacing * 0.8;
+      const staffGap = pxSpacing * 2.5;
+      for (let y = pxMargin + pxSpacing; y < pxHeight - pxMargin - (staffSpacing * 4); y += (staffSpacing * 4) + staffGap) {
         for (let i = 0; i < 5; i++) {
-          const lineY = y + i * pxSpacing;
+          const lineY = y + i * staffSpacing;
           const line = new fabric.Line([pxMargin, lineY, pxWidth - pxMargin, lineY], patternOptions);
           (line as any).isPattern = true;
           objectsToAdd.push(line);
@@ -388,328 +398,463 @@ export const Editor: React.FC<EditorProps> = ({
   };
 
   return (
-    <div className="flex h-full bg-[#f3f4f6] overflow-hidden font-sans">
-      {/* Sidebar */}
-      <motion.div 
-        animate={{ width: isSidebarOpen ? 320 : 0 }}
-        className="bg-white border-r border-gray-200 flex flex-col shadow-xl z-20 relative overflow-hidden"
-      >
-        <div className="p-6 flex-1 overflow-y-auto w-80">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xl font-bold text-gray-900">Layout Settings</h2>
+    <div className="flex flex-col min-h-screen bg-[#1a1a1a] text-slate-300 font-sans">
+      {/* Top Navigation */}
+      <nav className="h-14 bg-[#111111] border-b border-white/5 flex items-center justify-between px-6 z-30">
+        <div className="flex items-center gap-2 group cursor-pointer">
+          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+            <Printer size={18} />
           </div>
-
-          <div className="space-y-8">
-            {/* Layout Type */}
-            <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Pattern Type</label>
-              <div className="grid grid-cols-5 gap-2">
-                {[
-                  { id: 'lined', icon: AlignLeft, label: 'Lined' },
-                  { id: 'grid', icon: Grid3X3, label: 'Grid' },
-                  { id: 'dots', icon: MoreHorizontal, label: 'Dots' },
-                  { id: 'staff', icon: Music, label: 'Staff' },
-                  { id: 'cross', icon: Plus, label: 'Cross' },
-                ].map((type) => (
-                  <button
-                    key={type.id}
-                    onClick={() => setLayoutType(type.id as LayoutType)}
-                    className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
-                      layoutType === type.id 
-                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
-                        : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-                    }`}
-                    title={type.label}
-                  >
-                    <type.icon size={20} />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Spacing */}
-            <div>
-              <div className="flex justify-between mb-4">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Spacing (mm)</label>
-                <span className="text-xs font-bold text-indigo-600">{lineSpacing}mm</span>
-              </div>
-              <input 
-                type="range" min="2" max="30" step="0.5"
-                value={lineSpacing}
-                onChange={(e) => setLineSpacing(parseFloat(e.target.value))}
-                className="w-full accent-indigo-600"
-              />
-            </div>
-
-            {/* Margin */}
-            <div>
-              <div className="flex justify-between mb-4">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Margin (mm)</label>
-                <span className="text-xs font-bold text-indigo-600">{margin}mm</span>
-              </div>
-              <input 
-                type="range" min="0" max="100" step="1"
-                value={margin}
-                onChange={(e) => setMargin(parseFloat(e.target.value))}
-                className="w-full accent-indigo-600"
-              />
-            </div>
-
-            {/* Thickness */}
-            <div>
-              <div className="flex justify-between mb-4">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Thickness (pt)</label>
-                <span className="text-xs font-bold text-indigo-600">{lineThickness}pt</span>
-              </div>
-              <input 
-                type="range" min="0.1" max="5" step="0.1"
-                value={lineThickness}
-                onChange={(e) => setLineThickness(parseFloat(e.target.value))}
-                className="w-full accent-indigo-600"
-              />
-            </div>
-
-            {/* Opacity */}
-            <div>
-              <div className="flex justify-between mb-4">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Opacity</label>
-                <span className="text-xs font-bold text-indigo-600">{Math.round(lineOpacity * 100)}%</span>
-              </div>
-              <input 
-                type="range" min="0.05" max="1" step="0.05"
-                value={lineOpacity}
-                onChange={(e) => setLineOpacity(parseFloat(e.target.value))}
-                className="w-full accent-indigo-600"
-              />
-            </div>
-
-            {/* Colors */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Line Color</label>
-                <input 
-                  type="color" 
-                  value={themeColor}
-                  onChange={(e) => setThemeColor(e.target.value)}
-                  className="w-full h-10 rounded-lg cursor-pointer border-none p-0"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Paper Color</label>
-                <input 
-                  type="color" 
-                  value={backgroundColor}
-                  onChange={(e) => setBackgroundColor(e.target.value)}
-                  className="w-full h-10 rounded-lg cursor-pointer border-none p-0"
-                />
-              </div>
-            </div>
-
-            {/* Sidebar Toggle */}
-            <div className="space-y-4 pt-4 border-t border-gray-100">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-gray-700">Vertical Sidebar</span>
-                <button 
-                  onClick={() => setShowSidebar(!showSidebar)}
-                  className={`w-12 h-6 rounded-full transition-all relative ${showSidebar ? 'bg-indigo-600' : 'bg-gray-200'}`}
-                >
-                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${showSidebar ? 'left-7' : 'left-1'}`} />
-                </button>
-              </div>
-              {showSidebar && (
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-4">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Sidebar Distance (mm)</label>
-                      <span className="text-xs font-bold text-indigo-600">{sidebarDistance}mm</span>
-                    </div>
-                    <input 
-                      type="range" min="5" max="100" step="1"
-                      value={sidebarDistance}
-                      onChange={(e) => setSidebarDistance(parseFloat(e.target.value))}
-                      className="w-full accent-indigo-600"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Sidebar Color</label>
-                    <input 
-                      type="color" 
-                      value={sidebarColor}
-                      onChange={(e) => setSidebarColor(e.target.value)}
-                      className="w-full h-8 rounded-lg cursor-pointer border-none p-0"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <span className="text-lg font-bold tracking-tight text-white">PaperMe</span>
         </div>
 
-        {/* Sidebar Toggle Button (Inside) */}
-        <button 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 bg-white border border-gray-200 border-r-0 p-1 rounded-l-md shadow-md hover:bg-gray-50 z-30"
-        >
-          {isSidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-        </button>
-      </motion.div>
+        <div className="hidden md:flex items-center gap-6">
+          <button className="flex items-center gap-2 text-sm font-medium hover:text-white transition-colors">
+            <Grid3X3 size={16} className="text-orange-500" />
+            Templates
+          </button>
+          <button className="flex items-center gap-2 text-sm font-medium hover:text-white transition-colors">
+            <FileText size={16} className="text-orange-500" />
+            Guide
+          </button>
+          <button className="flex items-center gap-2 text-sm font-medium hover:text-white transition-colors">
+            <Info size={16} className="text-orange-500" />
+            About
+          </button>
+          <button className="flex items-center gap-2 text-sm font-medium hover:text-white transition-colors">
+            <Heart size={16} className="text-orange-500" />
+            Support
+          </button>
+          <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-md text-xs font-bold">
+            <Globe size={14} />
+            English
+          </div>
+        </div>
+      </nav>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Bar */}
-        <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 z-10">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <FileText size={18} className="text-gray-400" />
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <div className="w-80 bg-[#111111] border-r border-white/5 flex flex-col z-20 overflow-y-auto custom-scrollbar">
+          <div className="p-5 space-y-8">
+            {/* Export Buttons */}
+            <div className="grid grid-cols-3 gap-2">
+              <button 
+                onClick={exportPDF}
+                className="flex flex-col items-center gap-1 p-2 bg-emerald-600/10 border border-emerald-500/20 rounded-lg text-emerald-500 hover:bg-emerald-600/20 transition-all"
+              >
+                <FileDown size={20} />
+                <span className="text-[10px] font-bold uppercase">Export PDF</span>
+              </button>
+              <button 
+                className="flex flex-col items-center gap-1 p-2 bg-blue-600/10 border border-blue-500/20 rounded-lg text-blue-500 hover:bg-blue-600/20 transition-all opacity-50 cursor-not-allowed"
+              >
+                <FileCode size={20} />
+                <span className="text-[10px] font-bold uppercase">Export SVG</span>
+              </button>
+              <button 
+                className="flex flex-col items-center gap-1 p-2 bg-indigo-600/10 border border-indigo-500/20 rounded-lg text-indigo-500 hover:bg-indigo-600/20 transition-all opacity-50 cursor-not-allowed"
+              >
+                <FileImage size={20} />
+                <span className="text-[10px] font-bold uppercase">Export PNG</span>
+              </button>
+            </div>
+
+            {/* Paper Type */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
+                <FileText size={14} className="text-indigo-500" />
+                Paper Type
+              </div>
+              <select 
+                value={layoutType}
+                onChange={(e) => setLayoutType(e.target.value as LayoutType)}
+                className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none"
+              >
+                <option value="lined">Lined Paper</option>
+                <option value="grid">Grid Paper</option>
+                <option value="dots">Dot Grid</option>
+                <option value="staff">Music Staff</option>
+                <option value="cross">Cross Grid</option>
+              </select>
+            </div>
+
+            {/* Paper Size */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
+                <Maximize size={14} className="text-indigo-500" />
+                Paper Size
+              </div>
               <select 
                 value={paperSize}
                 onChange={(e) => onSizeChange?.(e.target.value as PaperSize)}
-                className="text-sm font-bold text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer"
+                className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none"
               >
                 {Object.keys(PAPER_SIZES).map(size => (
-                  <option key={size} value={size}>{size}</option>
+                  <option key={size} value={size}>{size} ({PAPER_SIZES[size as PaperSize].width} × {PAPER_SIZES[size as PaperSize].height} mm)</option>
                 ))}
               </select>
-            </div>
-            <div className="h-4 w-px bg-gray-200" />
-            <div className="flex bg-gray-100 p-1 rounded-lg">
-              <button 
-                onClick={() => onOrientationChange?.('portrait')}
-                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${orientation === 'portrait' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                Portrait
-              </button>
-              <button 
-                onClick={() => onOrientationChange?.('landscape')}
-                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${orientation === 'landscape' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                Landscape
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex bg-gray-100 p-1 rounded-lg">
-              <button 
-                onClick={undo}
-                disabled={historyIndex <= 0}
-                className="p-2 hover:bg-white rounded-md transition-all text-gray-500 disabled:opacity-30"
-                title="Undo"
-              >
-                <RotateCcw size={16} />
-              </button>
-              <button 
-                onClick={redo}
-                disabled={historyIndex >= history.length - 1}
-                className="p-2 hover:bg-white rounded-md transition-all text-gray-500 disabled:opacity-30"
-                title="Redo"
-              >
-                <RotateCw size={16} />
-              </button>
+              <div className="flex bg-[#1a1a1a] p-1 rounded-lg border border-white/5">
+                <button 
+                  onClick={() => onOrientationChange?.('portrait')}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${orientation === 'portrait' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                  Portrait
+                </button>
+                <button 
+                  onClick={() => onOrientationChange?.('landscape')}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${orientation === 'landscape' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                  Landscape
+                </button>
+              </div>
             </div>
 
-            <div className="w-px h-6 bg-gray-200" />
-
-            <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-2 py-1">
-              <button onClick={() => setZoom(z => Math.max(0.1, z - 0.1))} className="p-1 hover:bg-white rounded transition-all text-gray-500">
-                <ZoomOut size={16} />
-              </button>
-              <span className="text-[10px] font-black w-10 text-center text-gray-600">{Math.round(zoom * 100)}%</span>
-              <button onClick={() => setZoom(z => Math.min(2, z + 0.1))} className="p-1 hover:bg-white rounded transition-all text-gray-500">
-                <ZoomIn size={16} />
-              </button>
+            {/* Theme */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
+                <Settings size={14} className="text-pink-500" />
+                Theme
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Line</span>
+                  <input 
+                    type="color" 
+                    value={themeColor}
+                    onChange={(e) => setThemeColor(e.target.value)}
+                    className="w-full h-8 rounded-lg cursor-pointer bg-transparent border border-white/10 p-0.5"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Paper</span>
+                  <input 
+                    type="color" 
+                    value={backgroundColor}
+                    onChange={(e) => setBackgroundColor(e.target.value)}
+                    className="w-full h-8 rounded-lg cursor-pointer bg-transparent border border-white/10 p-0.5"
+                  />
+                </div>
+              </div>
             </div>
-            
-            <button 
-              onClick={clearCanvas}
-              className="p-2 hover:bg-red-50 rounded-xl transition-colors text-gray-400 hover:text-red-500"
-              title="Clear Canvas"
-            >
-              <RotateCcw size={20} />
-            </button>
-            <button 
-              onClick={printCanvas}
-              className="flex items-center gap-2 px-5 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-bold text-sm shadow-sm active:scale-95"
-            >
-              <Printer size={18} />
-              Print
-            </button>
-            <button 
-              onClick={exportPDF}
-              className="flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all font-bold text-sm shadow-lg shadow-indigo-100 active:scale-95"
-            >
-              <Download size={18} />
-              Download PDF
-            </button>
+
+            {/* Line Style */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
+                <AlignLeft size={14} className="text-blue-500" />
+                Line Style
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Line Spacing (mm)</span>
+                  <span className="text-[10px] font-bold text-indigo-400">{lineSpacing}mm</span>
+                </div>
+                <input 
+                  type="range" min="2" max="30" step="0.5"
+                  value={lineSpacing}
+                  onChange={(e) => setLineSpacing(parseFloat(e.target.value))}
+                  className="w-full accent-indigo-600 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Line Width (px)</span>
+                  <span className="text-[10px] font-bold text-indigo-400">{lineThickness}px</span>
+                </div>
+                <input 
+                  type="range" min="0.1" max="5" step="0.1"
+                  value={lineThickness}
+                  onChange={(e) => setLineThickness(parseFloat(e.target.value))}
+                  className="w-full accent-indigo-600 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Opacity</span>
+                  <span className="text-[10px] font-bold text-indigo-400">{Math.round(lineOpacity * 100)}%</span>
+                </div>
+                <input 
+                  type="range" min="0.05" max="1" step="0.05"
+                  value={lineOpacity}
+                  onChange={(e) => setLineOpacity(parseFloat(e.target.value))}
+                  className="w-full accent-indigo-600 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Margin Settings */}
+            <div className="space-y-4 pb-10">
+              <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
+                <Maximize size={14} className="text-emerald-500" />
+                Margin Settings
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Margins (mm)</span>
+                  <span className="text-[10px] font-bold text-indigo-400">{margin}mm</span>
+                </div>
+                <input 
+                  type="range" min="0" max="100" step="1"
+                  value={margin}
+                  onChange={(e) => setMargin(parseFloat(e.target.value))}
+                  className="w-full accent-indigo-600 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+
+              {/* Sidebar Toggle */}
+              <div className="pt-4 border-t border-white/5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-400 uppercase">Vertical Sidebar</span>
+                  <button 
+                    onClick={() => setShowSidebar(!showSidebar)}
+                    className={`w-10 h-5 rounded-full transition-all relative ${showSidebar ? 'bg-indigo-600' : 'bg-white/10'}`}
+                  >
+                    <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${showSidebar ? 'left-6' : 'left-1'}`} />
+                  </button>
+                </div>
+                {showSidebar && (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase">Distance (mm)</span>
+                        <span className="text-[10px] font-bold text-indigo-400">{sidebarDistance}mm</span>
+                      </div>
+                      <input 
+                        type="range" min="5" max="100" step="1"
+                        value={sidebarDistance}
+                        onChange={(e) => setSidebarDistance(parseFloat(e.target.value))}
+                        className="w-full accent-indigo-600 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">Color</span>
+                      <input 
+                        type="color" 
+                        value={sidebarColor}
+                        onChange={(e) => setSidebarColor(e.target.value)}
+                        className="w-12 h-6 rounded cursor-pointer bg-transparent border border-white/10 p-0.5"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Object Toolbar (Floating) */}
-        <AnimatePresence>
-          {fabricCanvasRef.current && (
-            <motion.div 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-xl border border-white/20 p-2 rounded-2xl shadow-2xl flex items-center gap-2 z-30"
-            >
-              <button 
-                onClick={addText}
-                className="p-3 hover:bg-indigo-50 rounded-xl text-gray-600 hover:text-indigo-600 transition-all flex flex-col items-center gap-1"
-                title="Add Text"
-              >
-                <Type size={20} />
-                <span className="text-[10px] font-bold">Text</span>
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar">
+          {/* Canvas Area */}
+          <div className="flex-1 min-h-[800px] flex flex-col items-center p-12 bg-[#1a1a1a]">
+            {/* Zoom Controls */}
+            <div className="mb-8 flex items-center gap-4 bg-[#111111] border border-white/5 p-2 rounded-xl shadow-2xl">
+              <button onClick={() => setZoom(z => Math.max(0.1, z - 0.1))} className="p-2 hover:bg-white/5 rounded-lg transition-all text-slate-400">
+                <ZoomOut size={18} />
               </button>
-              
-              <label className="p-3 hover:bg-indigo-50 rounded-xl text-gray-600 hover:text-indigo-600 transition-all flex flex-col items-center gap-1 cursor-pointer">
-                <ImageIcon size={20} />
-                <span className="text-[10px] font-bold">Image</span>
-                <input type="file" className="hidden" accept="image/*" onChange={addImage} />
-              </label>
+              <div className="w-px h-4 bg-white/10" />
+              <span className="text-xs font-bold text-slate-300 w-12 text-center">{Math.round(zoom * 100)}%</span>
+              <div className="w-px h-4 bg-white/10" />
+              <button onClick={() => setZoom(z => Math.min(2, z + 0.1))} className="p-2 hover:bg-white/5 rounded-lg transition-all text-slate-400">
+                <ZoomIn size={18} />
+              </button>
+              <div className="w-px h-4 bg-white/10" />
+              <button onClick={undo} disabled={historyIndex <= 0} className="p-2 hover:bg-white/5 rounded-lg text-slate-400 disabled:opacity-20">
+                <RotateCcw size={18} />
+              </button>
+              <button onClick={redo} disabled={historyIndex >= history.length - 1} className="p-2 hover:bg-white/5 rounded-lg text-slate-400 disabled:opacity-20">
+                <RotateCw size={18} />
+              </button>
+              <div className="w-px h-4 bg-white/10" />
+              <button onClick={printCanvas} className="p-2 hover:bg-white/5 rounded-lg text-slate-400" title="Print">
+                <Printer size={18} />
+              </button>
+            </div>
 
-              {selectedObject && (
-                <>
-                  <div className="w-px h-8 bg-gray-200 mx-2" />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
+              className="bg-white shadow-[0_40px_100px_rgba(0,0,0,0.4)] transition-transform duration-200"
+            >
+              <canvas ref={canvasRef} />
+            </motion.div>
+
+            {/* Object Toolbar (Floating) */}
+            <AnimatePresence>
+              {fabricCanvasRef.current && (
+                <motion.div 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  className="mt-12 bg-[#111111] border border-white/10 p-2 rounded-2xl shadow-2xl flex items-center gap-2"
+                >
                   <button 
-                    onClick={() => rotateSelected(-90)}
-                    className="p-3 hover:bg-indigo-50 rounded-xl text-gray-600 hover:text-indigo-600 transition-all flex flex-col items-center gap-1"
-                    title="Rotate Left"
+                    onClick={addText}
+                    className="p-3 hover:bg-white/5 rounded-xl text-slate-400 hover:text-white transition-all flex flex-col items-center gap-1"
+                  >
+                    <Type size={20} />
+                    <span className="text-[10px] font-bold uppercase">Text</span>
+                  </button>
+                  
+                  <label className="p-3 hover:bg-white/5 rounded-xl text-slate-400 hover:text-white transition-all flex flex-col items-center gap-1 cursor-pointer">
+                    <ImageIcon size={20} />
+                    <span className="text-[10px] font-bold uppercase">Image</span>
+                    <input type="file" className="hidden" accept="image/*" onChange={addImage} />
+                  </label>
+
+                  {selectedObject && (
+                    <>
+                      <div className="w-px h-8 bg-white/10 mx-2" />
+                      <button 
+                        onClick={() => rotateSelected(-90)}
+                        className="p-3 hover:bg-white/5 rounded-xl text-slate-400 hover:text-white transition-all flex flex-col items-center gap-1"
+                      >
+                        <RotateCcw size={20} />
+                        <span className="text-[10px] font-bold uppercase">Rotate</span>
+                      </button>
+                      <button 
+                        onClick={deleteSelected}
+                        className="p-3 hover:bg-red-500/10 rounded-xl text-slate-400 hover:text-red-500 transition-all flex flex-col items-center gap-1"
+                      >
+                        <Plus size={20} className="rotate-45" />
+                        <span className="text-[10px] font-bold uppercase">Delete</span>
+                      </button>
+                    </>
+                  )}
+                  <div className="w-px h-8 bg-white/10 mx-2" />
+                  <button 
+                    onClick={clearCanvas}
+                    className="p-3 hover:bg-red-500/10 rounded-xl text-slate-400 hover:text-red-500 transition-all flex flex-col items-center gap-1"
                   >
                     <RotateCcw size={20} />
-                    <span className="text-[10px] font-bold">Rotate</span>
+                    <span className="text-[10px] font-bold uppercase">Clear</span>
                   </button>
-                  <button 
-                    onClick={() => rotateSelected(90)}
-                    className="p-3 hover:bg-indigo-50 rounded-xl text-gray-600 hover:text-indigo-600 transition-all flex flex-col items-center gap-1"
-                    title="Rotate Right"
-                  >
-                    <RotateCw size={20} />
-                    <span className="text-[10px] font-bold">Rotate</span>
-                  </button>
-                  <button 
-                    onClick={deleteSelected}
-                    className="p-3 hover:bg-red-50 rounded-xl text-gray-600 hover:text-red-600 transition-all flex flex-col items-center gap-1"
-                    title="Delete Selected"
-                  >
-                    <Plus size={20} className="rotate-45" />
-                    <span className="text-[10px] font-bold">Delete</span>
-                  </button>
-                </>
+                </motion.div>
               )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </AnimatePresence>
+          </div>
 
-        {/* Canvas Area */}
-        <div className="flex-1 overflow-auto p-12 flex justify-center items-start bg-[#f3f4f6]">
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
-            className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] transition-transform duration-200"
-          >
-            <canvas ref={canvasRef} />
-          </motion.div>
+          {/* Tips Section */}
+          <div className="bg-[#111111] border-t border-white/5 p-12">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex items-center gap-3 mb-10">
+                <Lightbulb className="text-orange-500" size={24} />
+                <h3 className="text-xl font-bold text-white">Tips</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-[#1a1a1a] border border-white/5 p-6 rounded-2xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Settings className="text-green-500" size={20} />
+                    <h4 className="font-bold text-white">Custom Template</h4>
+                  </div>
+                  <p className="text-sm text-slate-400 leading-relaxed">
+                    You can adjust various parameters in the control panel to create paper templates that fully meet your needs. After adjustments, click "Export Settings" to save your custom template.
+                  </p>
+                </div>
+                
+                <div className="bg-[#1a1a1a] border border-white/5 p-6 rounded-2xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Printer className="text-blue-500" size={20} />
+                    <h4 className="font-bold text-white">Printing Advice</h4>
+                  </div>
+                  <p className="text-sm text-slate-400 leading-relaxed">
+                    After generating PDF, it is recommended to use high-quality paper for printing. For colored templates, please ensure your printer has sufficient colored ink. Double-sided printing can save paper.
+                  </p>
+                </div>
+                
+                <div className="bg-[#1a1a1a] border border-white/5 p-6 rounded-2xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <RotateCw className="text-yellow-500" size={20} />
+                    <h4 className="font-bold text-white">Creative Uses</h4>
+                  </div>
+                  <p className="text-sm text-slate-400 leading-relaxed">
+                    Our paper templates are not only suitable for note-taking and studying, but can also be used for diaries, planning, drawing, calligraphy practice, project management, and many other creative purposes. Use your imagination!
+                  </p>
+                </div>
+              </div>
+
+              {/* Contact Us */}
+              <div className="mt-12 bg-indigo-600/10 border border-indigo-500/20 p-8 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
+                    <Mail size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white">Contact Us</h4>
+                    <p className="text-sm text-slate-400">If you have any questions, suggestions, or customization needs, please feel free to contact us.</p>
+                  </div>
+                </div>
+                <a href="mailto:support@pixzens.com" className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2">
+                  support@pixzens.com
+                  <ExternalLink size={16} />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <footer className="bg-[#0a0a0a] border-t border-white/5 pt-16 pb-8 px-12">
+            <div className="max-w-6xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+                <div className="col-span-1 md:col-span-1">
+                  <div className="flex items-center gap-2 mb-6">
+                    <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+                      <Printer size={18} />
+                    </div>
+                    <span className="text-lg font-bold text-white tracking-tight">PaperMe</span>
+                  </div>
+                  <p className="text-sm text-slate-500 leading-relaxed">
+                    Provide you with beautiful custom printable papers to meet all your creative needs.
+                  </p>
+                </div>
+                
+                <div>
+                  <h5 className="text-white font-bold mb-6 flex items-center gap-2">
+                    <Mail size={16} className="text-indigo-500" />
+                    Contact Us
+                  </h5>
+                  <ul className="space-y-4 text-sm text-slate-500">
+                    <li className="flex items-center gap-2">
+                      Email: <span className="text-slate-300">support@pixzens.com</span>
+                    </li>
+                    <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+                    <li><a href="#" className="hover:text-white transition-colors">Terms of Use</a></li>
+                    <li><a href="#" className="hover:text-white transition-colors">Support Us</a></li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h5 className="text-white font-bold mb-6 flex items-center gap-2">
+                    <ExternalLink size={16} className="text-indigo-500" />
+                    Other Products
+                  </h5>
+                  <ul className="space-y-4 text-sm text-slate-500">
+                    <li><a href="#" className="flex items-center gap-2 hover:text-white transition-colors"><FileDown size={14} /> PdfZap - PDF Compression Tool</a></li>
+                    <li><a href="#" className="flex items-center gap-2 hover:text-white transition-colors"><RotateCw size={14} /> LIVP Converter</a></li>
+                    <li><a href="#" className="flex items-center gap-2 hover:text-white transition-colors"><Download size={14} /> Twitloader - Twitter Video Downloader</a></li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h5 className="text-white font-bold mb-6 flex items-center gap-2">
+                    <HelpCircle size={16} className="text-indigo-500" />
+                    Support
+                  </h5>
+                  <p className="text-sm text-slate-500 mb-4">Help us keep the servers running and the paper flowing.</p>
+                  <button className="w-full py-3 bg-white/5 border border-white/10 rounded-xl text-white font-bold hover:bg-white/10 transition-all flex items-center justify-center gap-2">
+                    <Heart size={16} className="text-pink-500" />
+                    Donate
+                  </button>
+                </div>
+              </div>
+              
+              <div className="pt-8 border-t border-white/5 text-center">
+                <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">© 2026 PaperMe. All rights reserved.</p>
+              </div>
+            </div>
+          </footer>
         </div>
       </div>
     </div>

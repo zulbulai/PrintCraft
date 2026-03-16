@@ -72,65 +72,14 @@ export default function App() {
 
   if (view === 'editor') {
     return (
-      <div className="h-screen flex flex-col bg-slate-50">
-        <header className="bg-white/80 backdrop-blur-xl border-b border-slate-100 px-8 py-4 flex items-center justify-between sticky top-0 z-50">
-          <div className="flex items-center gap-6">
-            <button 
-              onClick={() => setView('templates')}
-              className="p-2.5 hover:bg-slate-50 rounded-xl transition-all border border-transparent hover:border-slate-100"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView('landing')}>
-              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform">
-                <Printer size={20} />
-              </div>
-              <span className="text-xl font-bold tracking-tight font-display">PaperMe <span className="text-indigo-600">Pro</span></span>
-            </div>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Editing</span>
-              <span className="text-sm font-bold text-slate-700">{selectedTemplate?.name || 'Untitled Design'}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <select 
-                value={paperSize} 
-                onChange={(e) => setPaperSize(e.target.value as PaperSize)}
-                className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
-              >
-                <option value="A4">A4 Paper</option>
-                <option value="A5">A5 Paper</option>
-                <option value="Letter">Letter</option>
-                <option value="Legal">Legal</option>
-              </select>
-              <select 
-                value={orientation} 
-                onChange={(e) => setOrientation(e.target.value as 'portrait' | 'landscape')}
-                className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
-              >
-                <option value="portrait">Portrait</option>
-                <option value="landscape">Landscape</option>
-              </select>
-            </div>
-            <div className="w-px h-8 bg-slate-100 mx-2" />
-            {user ? (
-              <div className="flex items-center gap-3">
-                <img src={user.photoURL || ''} className="w-9 h-9 rounded-full border-2 border-white shadow-md" alt="" />
-                <button onClick={logout} className="p-2 hover:bg-red-50 rounded-xl transition-colors text-slate-400 hover:text-red-500">
-                  <LogOut size={20} />
-                </button>
-              </div>
-            ) : (
-              <button onClick={login} className="px-6 py-2.5 bg-slate-900 text-white rounded-full text-sm font-bold hover:bg-slate-800 transition-all">Sign In</button>
-            )}
-          </div>
-        </header>
+      <div className="h-screen flex flex-col bg-[#1a1a1a]">
         <main className="flex-1 overflow-hidden">
           <Editor 
             paperSize={paperSize} 
             orientation={orientation} 
             initialData={selectedTemplate?.canvasData} 
+            onSizeChange={setPaperSize}
+            onOrientationChange={setOrientation}
           />
         </main>
       </div>
@@ -153,7 +102,7 @@ export default function App() {
                 <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform">
                   <Printer size={20} />
                 </div>
-                <span className="text-xl font-bold tracking-tight font-display">PaperMe <span className="text-indigo-600">Pro</span></span>
+                <span className="text-xl font-bold tracking-tight font-display text-slate-900">PaperMe</span>
               </div>
             </div>
             <div className="flex items-center gap-8">
@@ -185,7 +134,7 @@ export default function App() {
               <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform">
                 <Printer size={20} />
               </div>
-              <span className="text-xl font-bold tracking-tight font-display">PaperMe <span className="text-indigo-600">Pro</span></span>
+              <span className="text-xl font-bold tracking-tight font-display text-slate-900">PaperMe</span>
             </div>
             <div className="flex items-center gap-6">
               <button onClick={() => setView('shop')} className="flex items-center gap-2 px-6 py-2.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-black uppercase tracking-widest hover:bg-indigo-100 transition-all active:scale-95">
@@ -219,11 +168,11 @@ export default function App() {
       {/* Premium Navigation */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
-          <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setView('landing')}>
+          <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setView('landing')}>
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform">
               <Printer size={22} />
             </div>
-            <span className="text-xl font-bold tracking-tight font-display">PaperMe <span className="text-indigo-600">Pro</span></span>
+            <span className="text-xl font-bold tracking-tight font-display text-slate-900">PaperMe</span>
           </div>
           
           <div className="hidden md:flex items-center gap-8">
@@ -237,7 +186,7 @@ export default function App() {
               <div className="flex items-center gap-3 pl-4 border-l border-slate-100">
                 <div className="text-right hidden sm:block">
                   <p className="text-xs font-bold text-slate-900 leading-none mb-1">{user.displayName?.split(' ')[0]}</p>
-                  <p className="text-[10px] text-slate-500 font-medium">Pro Member</p>
+                  <p className="text-[10px] text-slate-500 font-medium">Member</p>
                 </div>
                 <img src={user.photoURL || ''} className="w-9 h-9 rounded-full border-2 border-white shadow-sm" alt="" />
                 <button onClick={logout} className="p-2 hover:bg-slate-50 rounded-lg transition-colors text-slate-400 hover:text-red-500">
@@ -521,7 +470,7 @@ export default function App() {
                 <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
                   <Printer size={18} />
                 </div>
-                <span className="text-xl font-bold tracking-tight font-display">PaperMe <span className="text-indigo-600">Pro</span></span>
+                <span className="text-lg font-bold text-slate-900 tracking-tight font-display">PaperMe</span>
               </div>
               <p className="text-slate-500 max-w-xs leading-relaxed font-medium">
                 The world's most advanced layout engine for educational and professional printing.
@@ -546,7 +495,7 @@ export default function App() {
           </div>
           
           <div className="flex flex-col md:flex-row justify-between items-center pt-12 border-t border-slate-100 gap-8">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">© 2026 PaperMe Pro. All rights reserved.</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">© 2026 PaperMe. All rights reserved.</p>
             <div className="flex gap-6">
               <a href="#" className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all">
                 <Globe size={18} />
