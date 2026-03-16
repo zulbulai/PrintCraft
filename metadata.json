@@ -1,0 +1,8 @@
+{
+  "name": "PrintCraft Pro",
+  "description": "Professional online print layout and paper generator tool for teachers, students, and designers.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}

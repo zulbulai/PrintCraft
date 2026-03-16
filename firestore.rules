@@ -1,0 +1,92 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users
+// Fields:
+//   - uid: string (required)
+//   - email: string (required)
+//   - displayName: string
+//   - photoURL: string
+//   - role: string (required, 'user' or 'admin')
+//   - createdAt: timestamp
+//
+// Collection: templates
+// Fields:
+//   - name: string (required)
+//   - category: string (required)
+//   - canvasData: string (required)
+//   - paperSize: string (required)
+//   - isPremium: bool
+//
+// Collection: user_designs
+// Fields:
+//   - userId: string (required)
+//   - name: string (required)
+//   - canvasData: string (required)
+//   - lastModified: timestamp
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "jitendraeditiz@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.role in ['user', 'admin'];
+    }
+
+    function isValidTemplate(data) {
+      return data.keys().hasAll(['name', 'category', 'canvasData', 'paperSize']) &&
+             data.name is string && data.name.size() < 100 &&
+             data.category is string &&
+             data.canvasData is string &&
+             data.paperSize is string;
+    }
+
+    function isValidDesign(data) {
+      return data.keys().hasAll(['userId', 'name', 'canvasData']) &&
+             data.userId == request.auth.uid &&
+             data.name is string && data.name.size() < 100 &&
+             data.canvasData is string;
+    }
+
+    // Rules
+    match /users/{uid} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(uid) && isValidUser(request.resource.data) && request.resource.data.role == 'user';
+      allow update: if isOwner(uid) && isValidUser(request.resource.data) && request.resource.data.role == resource.data.role;
+      allow delete: if isAdmin();
+    }
+
+    match /templates/{templateId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidTemplate(request.resource.data);
+    }
+
+    match /user_designs/{designId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && isValidDesign(request.resource.data);
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && isValidDesign(request.resource.data);
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Template": {
+      "title": "Template",
+      "description": "Pre-designed paper templates",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "canvasData": { "type": "string", "description": "JSON string of Fabric.js canvas state" },
+        "paperSize": { "type": "string" },
+        "orientation": { "type": "string", "enum": ["portrait", "landscape"] },
+        "isPremium": { "type": "boolean" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["name", "category", "canvasData", "paperSize"]
+    },
+    "UserDesign": {
+      "title": "UserDesign",
+      "description": "Designs saved by users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "canvasData": { "type": "string" },
+        "paperSize": { "type": "string" },
+        "orientation": { "type": "string" },
+        "lastModified": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "canvasData"]
+    }
+  },
+  "firestore": {
+    "users/{uid}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "templates/{templateId}": {
+      "schema": "Template",
+      "description": "Global templates"
+    },
+    "user_designs/{designId}": {
+      "schema": "UserDesign",
+      "description": "User saved designs"
+    }
+  }
+}
