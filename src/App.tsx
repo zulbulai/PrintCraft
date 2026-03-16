@@ -4,8 +4,9 @@ import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User 
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Editor } from './components/Editor';
 import { TemplateGallery } from './components/TemplateGallery';
+import { Shop } from './components/Shop';
 import { PaperSize, Template } from './types';
-import { Layout, FileText, Settings, LogIn, LogOut, User as UserIcon, Palette, Printer, ChevronLeft } from 'lucide-react';
+import { Layout, FileText, Settings, LogIn, LogOut, User as UserIcon, Palette, Printer, ChevronLeft, ShoppingCart } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
@@ -13,7 +14,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [paperSize, setPaperSize] = useState<PaperSize>('A4');
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
-  const [view, setView] = useState<'landing' | 'templates' | 'editor'>('landing');
+  const [view, setView] = useState<'landing' | 'templates' | 'editor' | 'shop'>('landing');
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
 
   useEffect(() => {
@@ -126,6 +127,36 @@ export default function App() {
     );
   }
 
+  if (view === 'shop') {
+    return (
+      <div className="min-h-screen bg-white">
+        <nav className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center border-b">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setView('landing')}
+              className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView('landing')}>
+              <Printer className="text-indigo-600" size={32} />
+              <span className="text-2xl font-bold tracking-tighter">PrintCraft Pro</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-6">
+            <button onClick={() => setView('templates')} className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">Templates</button>
+            {user ? (
+              <img src={user.photoURL || ''} className="w-8 h-8 rounded-full border" alt="" />
+            ) : (
+              <button onClick={login} className="px-5 py-2 bg-slate-900 text-white rounded-full text-xs font-bold">Sign In</button>
+            )}
+          </div>
+        </nav>
+        <Shop />
+      </div>
+    );
+  }
+
   if (view === 'templates') {
     return (
       <div className="min-h-screen bg-white">
@@ -134,15 +165,21 @@ export default function App() {
             <Printer className="text-indigo-600" size={32} />
             <span className="text-2xl font-bold tracking-tighter">PrintCraft Pro</span>
           </div>
-          <button 
-            onClick={() => {
-              setSelectedTemplate(null);
-              setView('editor');
-            }}
-            className="px-6 py-2.5 bg-indigo-600 text-white rounded-full text-sm font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100"
-          >
-            Create Blank Design
-          </button>
+          <div className="flex items-center gap-6">
+            <button onClick={() => setView('shop')} className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold hover:bg-indigo-100 transition-colors">
+              <ShoppingCart size={18} />
+              Shop
+            </button>
+            <button 
+              onClick={() => {
+                setSelectedTemplate(null);
+                setView('editor');
+              }}
+              className="px-6 py-2.5 bg-indigo-600 text-white rounded-full text-sm font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100"
+            >
+              Create Blank Design
+            </button>
+          </div>
         </nav>
         <TemplateGallery onSelect={handleTemplateSelect} />
       </div>
@@ -158,8 +195,11 @@ export default function App() {
           <span className="text-2xl font-bold tracking-tighter">PrintCraft Pro</span>
         </div>
         <div className="flex items-center gap-6">
-          <a href="#" className="text-sm font-medium text-slate-600 hover:text-slate-900">Templates</a>
-          <a href="#" className="text-sm font-medium text-slate-600 hover:text-slate-900">Pricing</a>
+          <button onClick={() => setView('templates')} className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">Templates</button>
+          <button onClick={() => setView('shop')} className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold hover:bg-indigo-100 transition-colors">
+            <ShoppingCart size={18} />
+            Shop
+          </button>
           {user ? (
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-slate-900">Hi, {user.displayName?.split(' ')[0]}</span>
@@ -277,6 +317,37 @@ export default function App() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* Shop CTA */}
+      <section className="py-24 bg-indigo-600 overflow-hidden relative">
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-4xl font-bold text-white mb-6 leading-tight">
+                Unlock Premium Assets in our <br />
+                <span className="italic opacity-80">Design Marketplace.</span>
+              </h2>
+              <p className="text-indigo-100 mb-10 text-lg leading-relaxed">
+                Get access to exclusive template packs, high-resolution specialty papers, and custom design services to take your print projects to the next level.
+              </p>
+              <button 
+                onClick={() => setView('shop')}
+                className="px-10 py-4 bg-white text-indigo-600 rounded-2xl font-bold text-lg hover:bg-indigo-50 transition-all shadow-xl"
+              >
+                Visit the Shop
+              </button>
+            </div>
+            <div className="relative">
+              <div className="grid grid-cols-2 gap-4">
+                <img src="https://picsum.photos/seed/shop1/300/300" className="rounded-2xl shadow-lg rotate-3" alt="" referrerPolicy="no-referrer" />
+                <img src="https://picsum.photos/seed/shop2/300/300" className="rounded-2xl shadow-lg -rotate-3 mt-8" alt="" referrerPolicy="no-referrer" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-900/20 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl" />
       </section>
 
       {/* Footer */}
