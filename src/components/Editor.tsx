@@ -4,6 +4,8 @@ import { jsPDF } from 'jspdf';
 import { PaperSize, PAPER_SIZES } from '../types';
 import { Download, Type, Square, Circle, Minus, Trash2, ZoomIn, ZoomOut, RotateCcw, RotateCw, Maximize, Eraser, AlignCenter, Image as ImageIcon } from 'lucide-react';
 
+import { motion, AnimatePresence } from 'motion/react';
+
 interface EditorProps {
   paperSize: PaperSize;
   orientation: 'portrait' | 'landscape';
@@ -293,167 +295,193 @@ export const Editor: React.FC<EditorProps> = ({ paperSize, orientation, initialD
   const [showExportOptions, setShowExportOptions] = useState(false);
 
   return (
-    <div className="flex flex-col h-full bg-slate-100">
+    <div className="flex flex-col h-full bg-slate-50">
       {/* Toolbar */}
-      <div className="flex items-center justify-between p-3 bg-white border-b shadow-sm z-10">
-        <div className="flex items-center gap-1">
-          <div className="flex gap-1 bg-slate-50 p-1 rounded-xl mr-2">
-            <button onClick={addText} className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all text-slate-700" title="Add Text">
-              <Type size={18} />
+      <motion.div 
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-100 shadow-sm z-10"
+      >
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5 bg-slate-50 p-1.5 rounded-2xl mr-4 border border-slate-100">
+            <button onClick={addText} className="p-2.5 hover:bg-white hover:shadow-md rounded-xl transition-all text-slate-700" title="Add Text">
+              <Type size={20} />
             </button>
-            <button onClick={addRect} className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all text-slate-700" title="Add Rectangle">
-              <Square size={18} />
+            <button onClick={addRect} className="p-2.5 hover:bg-white hover:shadow-md rounded-xl transition-all text-slate-700" title="Add Rectangle">
+              <Square size={20} />
             </button>
-            <button onClick={addCircle} className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all text-slate-700" title="Add Circle">
-              <Circle size={18} />
+            <button onClick={addCircle} className="p-2.5 hover:bg-white hover:shadow-md rounded-xl transition-all text-slate-700" title="Add Circle">
+              <Circle size={20} />
             </button>
-            <button onClick={addLine} className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all text-slate-700" title="Add Line">
-              <Minus size={18} />
-            </button>
-          </div>
-
-          <div className="flex gap-1 bg-slate-50 p-1 rounded-xl mr-2">
-            <button onClick={undo} disabled={historyIndex <= 0} className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all text-slate-700 disabled:opacity-30" title="Undo">
-              <RotateCcw size={18} />
-            </button>
-            <button onClick={redo} disabled={historyIndex >= history.length - 1} className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all text-slate-700 disabled:opacity-30" title="Redo">
-              <RotateCw size={18} />
+            <button onClick={addLine} className="p-2.5 hover:bg-white hover:shadow-md rounded-xl transition-all text-slate-700" title="Add Line">
+              <Minus size={20} />
             </button>
           </div>
 
-          <div className="flex gap-1 bg-slate-50 p-1 rounded-xl">
-            <button onClick={centerObject} className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all text-slate-700" title="Center Object">
-              <AlignCenter size={18} />
+          <div className="flex gap-1.5 bg-slate-50 p-1.5 rounded-2xl mr-4 border border-slate-100">
+            <button onClick={undo} disabled={historyIndex <= 0} className="p-2.5 hover:bg-white hover:shadow-md rounded-xl transition-all text-slate-700 disabled:opacity-30" title="Undo">
+              <RotateCcw size={20} />
+            </button>
+            <button onClick={redo} disabled={historyIndex >= history.length - 1} className="p-2.5 hover:bg-white hover:shadow-md rounded-xl transition-all text-slate-700 disabled:opacity-30" title="Redo">
+              <RotateCw size={20} />
+            </button>
+          </div>
+
+          <div className="flex gap-1.5 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+            <button onClick={centerObject} className="p-2.5 hover:bg-white hover:shadow-md rounded-xl transition-all text-slate-700" title="Center Object">
+              <AlignCenter size={20} />
             </button>
             <div className="relative">
               <button 
                 onClick={() => setShowClearConfirm(!showClearConfirm)} 
-                className={`p-2 rounded-lg transition-all ${showClearConfirm ? 'bg-red-100 text-red-600' : 'hover:bg-white hover:shadow-sm text-slate-700'}`} 
+                className={`p-2.5 rounded-xl transition-all ${showClearConfirm ? 'bg-red-50 text-red-600 shadow-inner' : 'hover:bg-white hover:shadow-md text-slate-700'}`} 
                 title="Clear All"
               >
-                <Eraser size={18} />
+                <Eraser size={20} />
               </button>
-              {showClearConfirm && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 p-3 z-50">
-                  <p className="text-[10px] font-bold text-slate-900 mb-2">Clear entire canvas?</p>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={clearCanvas}
-                      className="flex-1 py-1.5 bg-red-600 text-white text-[10px] font-bold rounded-lg hover:bg-red-700"
-                    >
-                      Yes, Clear
-                    </button>
-                    <button 
-                      onClick={() => setShowClearConfirm(false)}
-                      className="flex-1 py-1.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-lg hover:bg-slate-200"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
+              <AnimatePresence>
+                {showClearConfirm && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                    className="absolute top-full left-0 mt-3 w-56 bg-white rounded-[1.5rem] shadow-2xl border border-slate-100 p-4 z-50"
+                  >
+                    <p className="text-xs font-bold text-slate-900 mb-3">Clear entire canvas?</p>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={clearCanvas}
+                        className="flex-1 py-2 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-700 shadow-lg shadow-red-100"
+                      >
+                        Clear
+                      </button>
+                      <button 
+                        onClick={() => setShowClearConfirm(false)}
+                        className="flex-1 py-2 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-200"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            <button onClick={deleteSelected} className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-all" title="Delete Selected">
-              <Trash2 size={18} />
+            <button onClick={deleteSelected} className="p-2.5 hover:bg-red-50 text-red-600 rounded-xl transition-all" title="Delete Selected">
+              <Trash2 size={20} />
             </button>
           </div>
         </div>
 
-        <div className="flex gap-3 items-center">
-          <div className="flex items-center gap-2 bg-slate-100 rounded-xl px-2 py-1">
-            <button onClick={() => setZoom(z => Math.max(0.1, z - 0.1))} className="p-1.5 hover:bg-white rounded-lg transition-all shadow-sm">
-              <ZoomOut size={16} />
+        <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-2xl px-3 py-1.5">
+            <button onClick={() => setZoom(z => Math.max(0.1, z - 0.1))} className="p-2 hover:bg-white rounded-xl transition-all shadow-sm">
+              <ZoomOut size={18} />
             </button>
-            <span className="text-[10px] font-bold w-10 text-center text-slate-500">{Math.round(zoom * 100)}%</span>
-            <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="p-1.5 hover:bg-white rounded-lg transition-all shadow-sm">
-              <ZoomIn size={16} />
+            <span className="text-xs font-black w-12 text-center text-slate-500 tracking-tighter">{Math.round(zoom * 100)}%</span>
+            <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="p-2 hover:bg-white rounded-xl transition-all shadow-sm">
+              <ZoomIn size={18} />
             </button>
-            <button onClick={() => setZoom(0.8)} className="p-1.5 hover:bg-white rounded-lg transition-all shadow-sm" title="Reset Zoom">
-              <Maximize size={16} />
+            <button onClick={() => setZoom(0.8)} className="p-2 hover:bg-white rounded-xl transition-all shadow-sm" title="Reset Zoom">
+              <Maximize size={18} />
             </button>
           </div>
           
           <div className="relative">
             <button 
               onClick={() => setShowExportOptions(!showExportOptions)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all font-bold text-sm shadow-lg shadow-indigo-100"
+              className="flex items-center gap-3 px-7 py-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all font-black text-sm shadow-xl shadow-indigo-100 active:scale-95"
             >
-              <Download size={18} />
+              <Download size={20} />
               Export
             </button>
-            {showExportOptions && (
-              <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 p-2 z-50">
-                <button 
-                  onClick={() => { exportPDF(); setShowExportOptions(false); }}
-                  className="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-lg text-sm font-bold text-slate-700 flex items-center gap-2"
+            <AnimatePresence>
+              {showExportOptions && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                  className="absolute top-full right-0 mt-3 w-56 bg-white rounded-[1.5rem] shadow-2xl border border-slate-100 p-2 z-50"
                 >
-                  <Download size={16} className="text-indigo-600" />
-                  Save as PDF
-                </button>
-                <button 
-                  onClick={() => { exportImage(); setShowExportOptions(false); }}
-                  className="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-lg text-sm font-bold text-slate-700 flex items-center gap-2"
-                >
-                  <ImageIcon size={16} className="text-indigo-600" />
-                  Save as Image
-                </button>
-              </div>
-            )}
+                  <button 
+                    onClick={() => { exportPDF(); setShowExportOptions(false); }}
+                    className="w-full text-left px-5 py-3 hover:bg-indigo-50 rounded-xl text-sm font-bold text-slate-700 flex items-center gap-3 transition-colors group"
+                  >
+                    <Download size={18} className="text-indigo-600 group-hover:scale-110 transition-transform" />
+                    Save as PDF
+                  </button>
+                  <button 
+                    onClick={() => { exportImage(); setShowExportOptions(false); }}
+                    className="w-full text-left px-5 py-3 hover:bg-indigo-50 rounded-xl text-sm font-bold text-slate-700 flex items-center gap-3 transition-colors group"
+                  >
+                    <ImageIcon size={18} className="text-indigo-600 group-hover:scale-110 transition-transform" />
+                    Save as Image
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Canvas Area */}
-      <div className="flex-1 overflow-auto p-8 flex flex-col items-center scrollbar-hide">
-        <div 
-          className="canvas-shadow bg-white transition-transform duration-200 mb-8"
+      <div className="flex-1 overflow-auto p-12 flex flex-col items-center scrollbar-hide">
+        <motion.div 
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="canvas-shadow bg-white transition-transform duration-200 mb-12"
           style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
         >
           <canvas ref={canvasRef} />
-        </div>
+        </motion.div>
 
         {/* Quick Tips */}
-        <div className="max-w-2xl w-full bg-white rounded-2xl p-6 border border-slate-200 shadow-sm mb-12">
-          <h4 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xs">?</span>
-            Quick Tips for Better Design
+        <motion.div 
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="max-w-3xl w-full bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50 mb-16"
+        >
+          <h4 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-3 font-display">
+            <div className="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm shadow-lg shadow-indigo-100">?</div>
+            Pro Tips for Perfect Prints
           </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex gap-3">
-              <div className="w-1 h-full bg-indigo-500 rounded-full" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="flex gap-4">
+              <div className="w-1.5 h-full bg-indigo-500 rounded-full" />
               <div>
-                <p className="text-xs font-bold text-slate-700">Stay inside guides</p>
-                <p className="text-[10px] text-slate-500">Keep important text inside the dashed lines to ensure it doesn't get cut during printing.</p>
+                <p className="text-sm font-bold text-slate-800 mb-1">Stay inside guides</p>
+                <p className="text-xs text-slate-500 leading-relaxed">Keep important text inside the dashed lines to ensure it doesn't get cut during printing.</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <div className="w-1 h-full bg-emerald-500 rounded-full" />
+            <div className="flex gap-4">
+              <div className="w-1.5 h-full bg-emerald-500 rounded-full" />
               <div>
-                <p className="text-xs font-bold text-slate-700">Use High Quality</p>
-                <p className="text-[10px] text-slate-500">Our PDF export uses 4x resolution for crystal clear prints on any home or office printer.</p>
+                <p className="text-sm font-bold text-slate-800 mb-1">Ultra High Quality</p>
+                <p className="text-xs text-slate-500 leading-relaxed">Our PDF export uses 4x resolution for crystal clear prints on any home or office printer.</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <div className="w-1 h-full bg-amber-500 rounded-full" />
+            <div className="flex gap-4">
+              <div className="w-1.5 h-full bg-amber-500 rounded-full" />
               <div>
-                <p className="text-xs font-bold text-slate-700">Keyboard Shortcuts</p>
-                <p className="text-[10px] text-slate-500">Use Backspace or Delete key to remove selected items quickly.</p>
+                <p className="text-sm font-bold text-slate-800 mb-1">Keyboard Shortcuts</p>
+                <p className="text-xs text-slate-500 leading-relaxed">Use Backspace or Delete key to remove selected items quickly. Ctrl+Z to undo.</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <div className="w-1 h-full bg-blue-500 rounded-full" />
+            <div className="flex gap-4">
+              <div className="w-1.5 h-full bg-blue-500 rounded-full" />
               <div>
-                <p className="text-xs font-bold text-slate-700">Auto-Centering</p>
-                <p className="text-[10px] text-slate-500">Use the center icon to perfectly align any object to the middle of the page.</p>
+                <p className="text-sm font-bold text-slate-800 mb-1">Auto-Centering</p>
+                <p className="text-xs text-slate-500 leading-relaxed">Use the center icon to perfectly align any object to the middle of the page.</p>
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
         .canvas-shadow {
-          box-shadow: 0 20px 50px -12px rgb(0 0 0 / 0.15);
+          box-shadow: 0 40px 80px -20px rgb(0 0 0 / 0.15);
         }
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
