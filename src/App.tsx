@@ -85,7 +85,7 @@ export default function App() {
               <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform">
                 <Printer size={20} />
               </div>
-              <span className="text-xl font-bold tracking-tight font-display">PrintCraft <span className="text-indigo-600">Pro</span></span>
+              <span className="text-xl font-bold tracking-tight font-display">PaperMe <span className="text-indigo-600">Pro</span></span>
             </div>
           </div>
           <div className="flex items-center gap-6">
@@ -153,7 +153,7 @@ export default function App() {
                 <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform">
                   <Printer size={20} />
                 </div>
-                <span className="text-xl font-bold tracking-tight font-display">PrintCraft <span className="text-indigo-600">Pro</span></span>
+                <span className="text-xl font-bold tracking-tight font-display">PaperMe <span className="text-indigo-600">Pro</span></span>
               </div>
             </div>
             <div className="flex items-center gap-8">
@@ -185,7 +185,7 @@ export default function App() {
               <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform">
                 <Printer size={20} />
               </div>
-              <span className="text-xl font-bold tracking-tight font-display">PrintCraft <span className="text-indigo-600">Pro</span></span>
+              <span className="text-xl font-bold tracking-tight font-display">PaperMe <span className="text-indigo-600">Pro</span></span>
             </div>
             <div className="flex items-center gap-6">
               <button onClick={() => setView('shop')} className="flex items-center gap-2 px-6 py-2.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-black uppercase tracking-widest hover:bg-indigo-100 transition-all active:scale-95">
@@ -223,7 +223,7 @@ export default function App() {
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform">
               <Printer size={22} />
             </div>
-            <span className="text-xl font-bold tracking-tight font-display">PrintCraft <span className="text-indigo-600">Pro</span></span>
+            <span className="text-xl font-bold tracking-tight font-display">PaperMe <span className="text-indigo-600">Pro</span></span>
           </div>
           
           <div className="hidden md:flex items-center gap-8">
@@ -521,7 +521,7 @@ export default function App() {
                 <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
                   <Printer size={18} />
                 </div>
-                <span className="text-xl font-bold tracking-tight font-display">PrintCraft <span className="text-indigo-600">Pro</span></span>
+                <span className="text-xl font-bold tracking-tight font-display">PaperMe <span className="text-indigo-600">Pro</span></span>
               </div>
               <p className="text-slate-500 max-w-xs leading-relaxed font-medium">
                 The world's most advanced layout engine for educational and professional printing.
@@ -546,7 +546,7 @@ export default function App() {
           </div>
           
           <div className="flex flex-col md:flex-row justify-between items-center pt-12 border-t border-slate-100 gap-8">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">© 2026 PrintCraft Pro. All rights reserved.</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">© 2026 PaperMe Pro. All rights reserved.</p>
             <div className="flex gap-6">
               <a href="#" className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all">
                 <Globe size={18} />

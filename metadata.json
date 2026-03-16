@@ -1,6 +1,6 @@
 {
-  "name": "PrintCraft Pro",
-  "description": "Professional online print layout and paper generator tool for teachers, students, and designers.",
+  "name": "PaperMe Pro",
+  "description": "The ultimate online paper generator. Create custom ruled, grid, dot, and music staff paper for printing.",
   "requestFramePermissions": [
     "camera",
     "geolocation"

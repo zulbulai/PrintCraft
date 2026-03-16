@@ -1,4 +1,5 @@
 export type PaperSize = 'A4' | 'A5' | 'Letter' | 'Legal' | 'Custom';
+export type LayoutType = 'lined' | 'grid' | 'dots' | 'staff' | 'cross';
 
 export interface PaperDimensions {
   width: number; // in mm
