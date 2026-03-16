@@ -11,6 +11,7 @@ interface Product {
   image: string;
   features: string[];
   isPopular?: boolean;
+  affiliateUrl: string;
 }
 
 const PRODUCTS: Product[] = [
@@ -21,7 +22,8 @@ const PRODUCTS: Product[] = [
     price: 499,
     image: 'https://picsum.photos/seed/pack1/400/300',
     features: ['500+ Templates', 'Lifetime Updates', 'Commercial License', 'Priority Support'],
-    isPopular: true
+    isPopular: true,
+    affiliateUrl: 'https://www.amazon.in/s?k=premium+templates+stationery'
   },
   {
     id: 'specialty-paper',
@@ -29,7 +31,8 @@ const PRODUCTS: Product[] = [
     description: 'High-quality textures and patterns for your digital and physical prints.',
     price: 299,
     image: 'https://picsum.photos/seed/paper/400/300',
-    features: ['50+ Textures', 'High Resolution', 'Print Ready', 'Multiple Formats']
+    features: ['50+ Textures', 'High Resolution', 'Print Ready', 'Multiple Formats'],
+    affiliateUrl: 'https://www.amazon.in/s?k=specialty+paper+bundle'
   },
   {
     id: 'custom-design',
@@ -37,23 +40,22 @@ const PRODUCTS: Product[] = [
     description: 'Get a custom template designed specifically for your school or office needs.',
     price: 999,
     image: 'https://picsum.photos/seed/design/400/300',
-    features: ['1-on-1 Consultation', '3 Revisions', 'Source Files Included', '24h Delivery']
+    features: ['1-on-1 Consultation', '3 Revisions', 'Source Files Included', '24h Delivery'],
+    affiliateUrl: 'https://www.amazon.in/s?k=custom+stationery+design'
   }
 ];
 
 export const Shop: React.FC = () => {
-  const [purchased, setPurchased] = useState<string | null>(null);
-
   const handlePurchase = (product: Product) => {
-    // Simulate purchase
+    // Open Amazon affiliate link
+    window.open(product.affiliateUrl, '_blank');
+    
     confetti({
       particleCount: 150,
       spread: 70,
       origin: { y: 0.6 },
       colors: ['#4f46e5', '#10b981', '#f59e0b']
     });
-    setPurchased(product.id);
-    setTimeout(() => setPurchased(null), 5000);
   };
 
   return (
@@ -127,26 +129,14 @@ export const Shop: React.FC = () => {
 
                 <button
                   onClick={() => handlePurchase(product)}
-                  disabled={purchased === product.id}
                   className={`w-full py-4.5 rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-3 active:scale-95 ${
-                    purchased === product.id
-                      ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100'
-                      : product.isPopular
+                    product.isPopular
                       ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl shadow-indigo-200'
                       : 'bg-slate-900 text-white hover:bg-slate-800 shadow-xl shadow-slate-200'
                   }`}
                 >
-                  {purchased === product.id ? (
-                    <>
-                      <Star size={18} fill="currentColor" />
-                      Purchased!
-                    </>
-                  ) : (
-                    <>
-                      Buy Now
-                      <ArrowRight size={18} />
-                    </>
-                  )}
+                  Buy Now
+                  <ArrowRight size={18} />
                 </button>
               </div>
             </motion.div>

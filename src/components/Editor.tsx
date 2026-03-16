@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as fabric from 'fabric';
 import { jsPDF } from 'jspdf';
 import { PaperSize, PAPER_SIZES } from '../types';
-import { Download, Type, Square, Circle, Minus, Trash2, ZoomIn, ZoomOut, RotateCcw, RotateCw, Maximize, Eraser, AlignCenter, Image as ImageIcon } from 'lucide-react';
+import { Download, Type, Square, Circle, Minus, Trash2, ZoomIn, ZoomOut, RotateCcw, RotateCw, Maximize, Eraser, AlignCenter, Image as ImageIcon, Settings } from 'lucide-react';
 
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -19,7 +19,13 @@ export const Editor: React.FC<EditorProps> = ({ paperSize, orientation, initialD
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
-  const MARGIN_MM = 10; // 10mm margin
+  // PaperMe-inspired settings
+  const [lineSpacing, setLineSpacing] = useState(8); // in mm
+  const [margin, setMargin] = useState(10); // in mm
+  const [themeColor, setThemeColor] = useState('#e2e8f0');
+  const [backgroundColor, setBackgroundColor] = useState('#ffffff');
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const addWatermark = (canvas: fabric.Canvas) => {
     const pxWidth = canvas.getWidth();
@@ -45,7 +51,7 @@ export const Editor: React.FC<EditorProps> = ({ paperSize, orientation, initialD
   };
 
   const addMarginGuides = (canvas: fabric.Canvas) => {
-    const pxMargin = (MARGIN_MM * 96) / 25.4;
+    const pxMargin = (margin * 96) / 25.4;
     const pxWidth = canvas.getWidth();
     const pxHeight = canvas.getHeight();
 
@@ -54,7 +60,7 @@ export const Editor: React.FC<EditorProps> = ({ paperSize, orientation, initialD
     canvas.remove(...existing);
 
     const guideOptions = {
-      stroke: '#e2e8f0',
+      stroke: themeColor,
       strokeWidth: 1,
       strokeDashArray: [5, 5],
       selectable: false,
@@ -71,6 +77,47 @@ export const Editor: React.FC<EditorProps> = ({ paperSize, orientation, initialD
       canvas.add(g);
       canvas.sendObjectToBack(g);
     });
+  };
+
+  const updateBackgroundPattern = (canvas: fabric.Canvas) => {
+    const pxSpacing = (lineSpacing * 96) / 25.4;
+    const pxMargin = (margin * 96) / 25.4;
+    const pxWidth = canvas.getWidth();
+    const pxHeight = canvas.getHeight();
+
+    // Remove existing pattern
+    const existing = canvas.getObjects().filter(obj => (obj as any).isPattern);
+    canvas.remove(...existing);
+
+    // Only add if spacing > 0
+    if (lineSpacing <= 0) return;
+
+    const patternOptions = {
+      stroke: themeColor,
+      strokeWidth: 0.5,
+      selectable: false,
+      evented: false,
+    };
+
+    // Add horizontal lines
+    for (let y = pxMargin + pxSpacing; y < pxHeight - pxMargin; y += pxSpacing) {
+      const line = new fabric.Line([pxMargin, y, pxWidth - pxMargin, y], patternOptions);
+      (line as any).isPattern = true;
+      canvas.add(line);
+      canvas.sendObjectToBack(line);
+    }
+
+    // Add sidebar (vertical line)
+    if (showSidebar) {
+      const sidebarX = pxMargin + (20 * 96) / 25.4; // 20mm from left margin
+      const sidebar = new fabric.Line([sidebarX, pxMargin, sidebarX, pxHeight - pxMargin], {
+        ...patternOptions,
+        strokeWidth: 1,
+      });
+      (sidebar as any).isPattern = true;
+      canvas.add(sidebar);
+      canvas.sendObjectToBack(sidebar);
+    }
   };
 
   const saveHistory = () => {
@@ -96,7 +143,7 @@ export const Editor: React.FC<EditorProps> = ({ paperSize, orientation, initialD
     const canvas = new fabric.Canvas(canvasRef.current, {
       width: pxWidth,
       height: pxHeight,
-      backgroundColor: '#ffffff',
+      backgroundColor: backgroundColor,
       preserveObjectStacking: true,
     });
 
@@ -105,12 +152,14 @@ export const Editor: React.FC<EditorProps> = ({ paperSize, orientation, initialD
     if (initialData) {
       canvas.loadFromJSON(initialData).then(() => {
         addMarginGuides(canvas);
+        updateBackgroundPattern(canvas);
         addWatermark(canvas);
         canvas.renderAll();
         saveHistory();
       });
     } else {
       addMarginGuides(canvas);
+      updateBackgroundPattern(canvas);
       addWatermark(canvas);
       saveHistory();
     }
@@ -126,6 +175,39 @@ export const Editor: React.FC<EditorProps> = ({ paperSize, orientation, initialD
       canvas.dispose();
     };
   }, [paperSize, orientation, initialData]);
+
+  // Re-render patterns when settings change
+  useEffect(() => {
+    if (fabricCanvasRef.current) {
+      fabricCanvasRef.current.set('backgroundColor', backgroundColor);
+      addMarginGuides(fabricCanvasRef.current);
+      updateBackgroundPattern(fabricCanvasRef.current);
+      fabricCanvasRef.current.renderAll();
+    }
+  }, [lineSpacing, margin, themeColor, showSidebar, backgroundColor]);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !fabricCanvasRef.current) return;
+
+    const reader = new FileReader();
+    reader.onload = (f) => {
+      const data = f.target?.result;
+      if (typeof data === 'string') {
+        fabric.Image.fromURL(data).then((img) => {
+          img.scaleToWidth(100);
+          img.set({
+            left: fabricCanvasRef.current!.getWidth() - 150,
+            top: 50,
+          });
+          fabricCanvasRef.current?.add(img);
+          fabricCanvasRef.current?.setActiveObject(img);
+          saveHistory();
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const undo = () => {
     if (historyIndex > 0 && fabricCanvasRef.current) {
@@ -331,6 +413,13 @@ export const Editor: React.FC<EditorProps> = ({ paperSize, orientation, initialD
             <button onClick={centerObject} className="p-2.5 hover:bg-white hover:shadow-md rounded-xl transition-all text-slate-700" title="Center Object">
               <AlignCenter size={20} />
             </button>
+            <button 
+              onClick={() => setShowSettings(!showSettings)} 
+              className={`p-2.5 rounded-xl transition-all ${showSettings ? 'bg-indigo-50 text-indigo-600 shadow-inner' : 'hover:bg-white hover:shadow-md text-slate-700'}`} 
+              title="Page Settings"
+            >
+              <Settings size={20} />
+            </button>
             <div className="relative">
               <button 
                 onClick={() => setShowClearConfirm(!showClearConfirm)} 
@@ -424,59 +513,176 @@ export const Editor: React.FC<EditorProps> = ({ paperSize, orientation, initialD
       </motion.div>
 
       {/* Canvas Area */}
-      <div className="flex-1 overflow-auto p-12 flex flex-col items-center scrollbar-hide">
-        <motion.div 
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="canvas-shadow bg-white transition-transform duration-200 mb-12"
-          style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
-        >
-          <canvas ref={canvasRef} />
-        </motion.div>
+      <div className="flex-1 overflow-hidden flex">
+        <div className="flex-1 overflow-auto p-12 flex flex-col items-center scrollbar-hide">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="canvas-shadow bg-white transition-transform duration-200 mb-12"
+            style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
+          >
+            <canvas ref={canvasRef} />
+          </motion.div>
 
-        {/* Quick Tips */}
-        <motion.div 
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="max-w-3xl w-full bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50 mb-16"
-        >
-          <h4 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-3 font-display">
-            <div className="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm shadow-lg shadow-indigo-100">?</div>
-            Pro Tips for Perfect Prints
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="flex gap-4">
-              <div className="w-1.5 h-full bg-indigo-500 rounded-full" />
-              <div>
-                <p className="text-sm font-bold text-slate-800 mb-1">Stay inside guides</p>
-                <p className="text-xs text-slate-500 leading-relaxed">Keep important text inside the dashed lines to ensure it doesn't get cut during printing.</p>
+          {/* Quick Tips */}
+          <motion.div 
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="max-w-3xl w-full bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50 mb-16"
+          >
+            <h4 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-3 font-display">
+              <div className="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm shadow-lg shadow-indigo-100">?</div>
+              Pro Tips for Perfect Prints
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="flex gap-4">
+                <div className="w-1.5 h-full bg-indigo-500 rounded-full" />
+                <div>
+                  <p className="text-sm font-bold text-slate-800 mb-1">Stay inside guides</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">Keep important text inside the dashed lines to ensure it doesn't get cut during printing.</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="w-1.5 h-full bg-emerald-500 rounded-full" />
+                <div>
+                  <p className="text-sm font-bold text-slate-800 mb-1">Ultra High Quality</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">Our PDF export uses 4x resolution for crystal clear prints on any home or office printer.</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="w-1.5 h-full bg-amber-500 rounded-full" />
+                <div>
+                  <p className="text-sm font-bold text-slate-800 mb-1">Keyboard Shortcuts</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">Use Backspace or Delete key to remove selected items quickly. Ctrl+Z to undo.</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="w-1.5 h-full bg-blue-500 rounded-full" />
+                <div>
+                  <p className="text-sm font-bold text-slate-800 mb-1">Auto-Centering</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">Use the center icon to perfectly align any object to the middle of the page.</p>
+                </div>
               </div>
             </div>
-            <div className="flex gap-4">
-              <div className="w-1.5 h-full bg-emerald-500 rounded-full" />
-              <div>
-                <p className="text-sm font-bold text-slate-800 mb-1">Ultra High Quality</p>
-                <p className="text-xs text-slate-500 leading-relaxed">Our PDF export uses 4x resolution for crystal clear prints on any home or office printer.</p>
+          </motion.div>
+        </div>
+
+        {/* Settings Sidebar */}
+        <AnimatePresence>
+          {showSettings && (
+            <motion.div
+              initial={{ x: 300, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 300, opacity: 0 }}
+              className="w-80 bg-white border-l border-slate-100 p-8 overflow-y-auto shadow-2xl z-20"
+            >
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-xl font-bold text-slate-900 font-display">Page Settings</h3>
+                <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-slate-50 rounded-xl text-slate-400">
+                  <RotateCcw size={18} className="rotate-45" />
+                </button>
               </div>
-            </div>
-            <div className="flex gap-4">
-              <div className="w-1.5 h-full bg-amber-500 rounded-full" />
-              <div>
-                <p className="text-sm font-bold text-slate-800 mb-1">Keyboard Shortcuts</p>
-                <p className="text-xs text-slate-500 leading-relaxed">Use Backspace or Delete key to remove selected items quickly. Ctrl+Z to undo.</p>
+
+              <div className="space-y-8">
+                {/* Line Spacing */}
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Line Spacing (mm)</label>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="20" 
+                    step="0.5"
+                    value={lineSpacing}
+                    onChange={(e) => setLineSpacing(parseFloat(e.target.value))}
+                    className="w-full accent-indigo-600"
+                  />
+                  <div className="flex justify-between mt-2 text-[10px] font-bold text-slate-500">
+                    <span>0mm</span>
+                    <span className="text-indigo-600">{lineSpacing}mm</span>
+                    <span>20mm</span>
+                  </div>
+                </div>
+
+                {/* Margin */}
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Margin Size (mm)</label>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="50" 
+                    step="1"
+                    value={margin}
+                    onChange={(e) => setMargin(parseFloat(e.target.value))}
+                    className="w-full accent-indigo-600"
+                  />
+                  <div className="flex justify-between mt-2 text-[10px] font-bold text-slate-500">
+                    <span>0mm</span>
+                    <span className="text-indigo-600">{margin}mm</span>
+                    <span>50mm</span>
+                  </div>
+                </div>
+
+                {/* Theme Color */}
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Line Color</label>
+                  <div className="flex flex-wrap gap-3">
+                    {['#e2e8f0', '#cbd5e1', '#94a3b8', '#6366f1', '#10b981', '#f59e0b', '#ef4444'].map(color => (
+                      <button
+                        key={color}
+                        onClick={() => setThemeColor(color)}
+                        className={`w-8 h-8 rounded-full border-2 transition-all ${themeColor === color ? 'border-indigo-600 scale-110 shadow-lg' : 'border-transparent'}`}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Background Color */}
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Background Color</label>
+                  <div className="flex flex-wrap gap-3">
+                    {['#ffffff', '#f8fafc', '#f1f5f9', '#fffbeb', '#f0fdf4', '#fdf2f8'].map(color => (
+                      <button
+                        key={color}
+                        onClick={() => setBackgroundColor(color)}
+                        className={`w-8 h-8 rounded-full border-2 transition-all ${backgroundColor === color ? 'border-indigo-600 scale-110 shadow-lg' : 'border-transparent'}`}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sidebar Toggle */}
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">Show Sidebar</p>
+                    <p className="text-[10px] text-slate-500">Add vertical line guide</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowSidebar(!showSidebar)}
+                    className={`w-12 h-6 rounded-full transition-all relative ${showSidebar ? 'bg-indigo-600' : 'bg-slate-200'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${showSidebar ? 'left-7' : 'left-1'}`} />
+                  </button>
+                </div>
+
+                {/* Logo Upload */}
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Add Logo</label>
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer group">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <ImageIcon className="w-8 h-8 text-slate-300 group-hover:text-indigo-500 transition-colors mb-2" />
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Upload Image</p>
+                    </div>
+                    <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                  </label>
+                </div>
               </div>
-            </div>
-            <div className="flex gap-4">
-              <div className="w-1.5 h-full bg-blue-500 rounded-full" />
-              <div>
-                <p className="text-sm font-bold text-slate-800 mb-1">Auto-Centering</p>
-                <p className="text-xs text-slate-500 leading-relaxed">Use the center icon to perfectly align any object to the middle of the page.</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `

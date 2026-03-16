@@ -235,5 +235,61 @@ export const STARTER_TEMPLATES: Template[] = [
         }))
       )
     })
+  },
+  {
+    id: 'music-sheet',
+    name: 'Music Staff Paper',
+    category: 'Creative',
+    thumbnail: 'https://picsum.photos/seed/music/300/400',
+    paperSize: 'A4',
+    orientation: 'portrait',
+    isPremium: false,
+    canvasData: JSON.stringify({
+      version: "5.3.0",
+      objects: Array.from({ length: 10 }).flatMap((_, group) => 
+        Array.from({ length: 5 }).map((_, line) => ({
+          type: "line",
+          left: 50,
+          top: 100 + group * 100 + line * 10,
+          x1: 0, y1: 0, x2: 700, y2: 0,
+          stroke: "#475569",
+          strokeWidth: 1,
+          selectable: false
+        }))
+      )
+    })
+  },
+  {
+    id: 'calligraphy-slanted',
+    name: 'Calligraphy (55° Slant)',
+    category: 'Creative',
+    thumbnail: 'https://picsum.photos/seed/calligraphy/300/400',
+    paperSize: 'A4',
+    orientation: 'portrait',
+    isPremium: true,
+    canvasData: JSON.stringify({
+      version: "5.3.0",
+      objects: [
+        ...Array.from({ length: 30 }).map((_, i) => ({
+          type: "line",
+          left: 50,
+          top: 50 + i * 40,
+          x1: 0, y1: 0, x2: 700, y2: 0,
+          stroke: "#cbd5e1",
+          strokeWidth: 0.5,
+          selectable: false
+        })),
+        ...Array.from({ length: 20 }).map((_, i) => ({
+          type: "line",
+          left: i * 50,
+          top: 0,
+          x1: 0, y1: 0, x2: 800, y2: 1200,
+          angle: -35, // 90 - 55 = 35
+          stroke: "#f1f5f9",
+          strokeWidth: 0.5,
+          selectable: false
+        }))
+      ]
+    })
   }
 ];
